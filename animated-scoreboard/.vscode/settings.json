@@ -1,0 +1,15 @@
+{
+    "terminal.integrated.profiles.windows": {
+        "PHP": {
+            "source": "PowerShell",
+            "overrideName": true,
+            "env": {
+                "PATH": "${env:PATH};D:\\bin\\php\\php8_3_0"
+            }
+        },
+
+        // "terminal.integrated.defaultProfile.windows": "Node JS"
+    },
+    "terminal.integrated.defaultProfile.windows": "PHP",
+    "window.autoDetectColorScheme": false
+}
