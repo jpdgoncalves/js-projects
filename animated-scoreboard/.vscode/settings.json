@@ -9,5 +9,6 @@
         },
     },
     "terminal.integrated.defaultProfile.windows": "PHP",
-    "window.autoDetectColorScheme": false
+    "window.autoDetectColorScheme": false,
+    "php.validate.executablePath": "D:\\bin\\php\\php8_3_0\\php.exe"
 }
