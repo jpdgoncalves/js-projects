@@ -1,12 +1,6 @@
 
 /**
  * 
- * @param {HTMLElement} elementA 
- * @param {HTMLElement} elementB 
- * @param {number} duration Duration of the transition in miliseconds
- */
-/**
- * 
  * @param {HTMLElement} elementA Element to swap
  * @param {HTMLElement} elementB Element to swap
  * @param {number} duration Duration of the transition in miliseconds
@@ -27,7 +21,7 @@ function smoothInlineElementSwap(elementA, elementB, duration) {
 
     styleA.transition = `transform ${duration}ms ease 0s` // Set the transition property
     styleA.display = `inline-block` // translate doesn't work on inline elements so we need to temporarily set it to inline-block
-    styleA.position = `relative` // For some reason this puts the elements in a different stacking context and makes them stand above their parent and their destination parent.
+    styleA.position = `relative` // This puts the element in a new stacking context above the parents as long as they are not positioned
     styleA.zIndex = "1" // Related to the previous explanation
     styleB.transition = `transform ${duration}ms ease 0s`
     styleB.display = `inline-block`
@@ -49,6 +43,8 @@ function smoothInlineElementSwap(elementA, elementB, duration) {
             parentB.removeChild(elementB)
             parentA.insertBefore(elementB, afterA)
             parentB.insertBefore(elementA, afterB)
+            elementA.ontransitionend = undefined
+            elementB.ontransitionend = undefined
             elementA.style = strStyleA
             elementB.style = strStyleB
             transitionResolver()
