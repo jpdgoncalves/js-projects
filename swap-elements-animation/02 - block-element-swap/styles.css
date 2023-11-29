@@ -1,0 +1,23 @@
+html, body {
+    margin: 0;
+    border: 0;
+    padding: 0;
+}
+
+.containerA {
+    margin-top: 50px;
+    margin-top: 50px;
+    background-color: red;
+}
+
+.containerB {
+    background-color: yellow;
+}
+
+.elementA {
+    background-color: blue;
+}
+
+.elementB {
+    background-color: violet;
+}
