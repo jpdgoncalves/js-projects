@@ -1,4 +1,3 @@
-
 /**
  * 
  * @param {HTMLElement} elementA Element to swap
