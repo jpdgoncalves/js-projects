@@ -1,0 +1,22 @@
+html, body {
+    margin: 0;
+    border: 0;
+    padding: 0;
+}
+
+body {
+    box-sizing: border-box;
+    border: 50px solid transparent;
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    place-items: center;
+    place-content: center;
+}
+
+pre {
+    font-size: 32px;
+    font-family: monospace;
+    margin: 0;
+    background-color: #eeeeee;
+}
