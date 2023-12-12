@@ -1,0 +1,15 @@
+{
+    "terminal.integrated.profiles.windows": {
+        "NodeJS": {
+            "source": "PowerShell",
+            "overrideName": true,
+            "env": {
+                "PATH": "${env:PATH};D:\\bin\\nodejs\\node18_12_1"
+            }
+        },
+
+        // "terminal.integrated.defaultProfile.windows": "Node JS"
+    },
+    "terminal.integrated.defaultProfile.windows": "NodeJS",
+    "window.autoDetectColorScheme": false
+}
