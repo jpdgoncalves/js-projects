@@ -73,14 +73,12 @@ export class WordSoup {
       throw new RangeError(
         `(${row},${col}) is out of range. Grid size is ${this.rowCol} rows and ${this.colCount} columns`,
       );
-    if (this.#occupation[idx] > 0 && this.#storage[idx] != char)
-      throw new Error(
-        `(${row},${col}) is already occupied by a different letter '${this.#storage[idx]}''`,
-      );
+    if (this.#occupation[idx] > 0 && this.#storage[idx] != char) return false;
 
     this.#occupation[idx] += 1;
     this.#unocupied.delete(this.#createLocKey(row, col));
     this.#storage[idx] = char;
+    return true;
   }
 
   unsetChar(row, col) {
@@ -236,8 +234,15 @@ function placeWord(word, location, direction, grid) {
     idx < word.length;
     r += rowInc, c += colInc, idx++
   ) {
+    // We might intercept another word
+    // but at a letter that's not the same.
+    // In such circunstances we have to backtrack.
     backtrack.push(grid.getChar(r, c));
-    grid.setChar(word[idx], r, c);
+    if (!grid.setChar(word[idx], r, c)) {
+      // This should always be successful.
+      placeWord(backtrack.join(''), location, direction, grid);
+      return [false, []];
+    }
   }
 
   return [true, [backtrack.join(''), location, direction]];
