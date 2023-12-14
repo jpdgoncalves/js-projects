@@ -19,7 +19,6 @@ export class WordSoup {
    * @type {Map<string, [number, number]>}
    */
   #unocupied = new Map();
-
   #width;
 
   /**
@@ -191,7 +190,7 @@ function hasUnexpectedSolutions(
       // For each of those positions
       for (let charPos of posList) {
         // If the direction is from left to right then we have to backtrack a few characters
-        // If it the opposite we have to add. The minus sign gives us this.
+        // If the opposite we have to add. The minus sign gives us this.
         // This gives us the hypothetical start of the word.
         const rowStart = row - charPos * rowInc;
         const colStart = col - charPos * colInc;
@@ -209,7 +208,7 @@ function hasUnexpectedSolutions(
     }
   }
 
-  // We search for all the words in all the possible positions
+  // We searched for all the words in all the possible positions
   // for the char at the location in question and didn't
   // find any unexpected solution.
   return false;
@@ -238,6 +237,10 @@ function placeWord(word, location, direction, grid) {
     // but at a letter that's not the same.
     // In such circunstances we have to backtrack.
     backtrack.push(grid.getChar(r, c));
+
+    // TODO: This doesn't work. Due to how the grid
+    // works we can't overwrite a character without
+    // unsetting it first.
     if (!grid.setChar(word[idx], r, c)) {
       // This should always be successful.
       placeWord(backtrack.join(''), location, direction, grid);
