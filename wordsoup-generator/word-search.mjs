@@ -240,7 +240,8 @@ function placeWord(word, location, direction, grid) {
 
     // TODO: This doesn't work. Due to how the grid
     // works we can't overwrite a character without
-    // unsetting it first.
+    // unsetting it first. It will cause an infinite
+    // loop.
     if (!grid.setChar(word[idx], r, c)) {
       // This should always be successful.
       placeWord(backtrack.join(''), location, direction, grid);
