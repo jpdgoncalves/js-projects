@@ -1,4 +1,5 @@
-import { createWordSearchPuzzle, WordSoup } from "./word-search.mjs";
+import { createWordSearchPuzzle } from "./word-search.mjs";
+import WordSoup from "./word-soup.mjs";
 
 const words = ["THE"];
 const letters = ["T", "H", "E"];

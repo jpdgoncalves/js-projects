@@ -9,117 +9,11 @@ const WORD_DIRECTIONS = {
   UpRight: [-1, 1],
 };
 
-export class WordSoup {
-  #occupation;
-  #storage;
-  /**
-   * Map of pair of locations and string
-   * and their raw format.
-   * The pairs are "row-col": [row, col]
-   * @type {Map<string, [number, number]>}
-   */
-  #unocupied = new Map();
-  #width;
-
-  /**
-   * @type {Map<string, Set<string>>}
-   */
-  solutions = new Map();
-
-  constructor(rowCount, colCount) {
-    this.#occupation = new Array(rowCount * colCount);
-    this.#occupation.fill(0);
-    this.#storage = new Array(rowCount * colCount);
-    this.#storage.fill(' ');
-    this.#width = colCount;
-
-    for (let r = 0; r < rowCount; r++) {
-      for (let c = 0; c < colCount; c++) {
-        this.#unocupied.set(this.#createLocKey(r, c), [r, c]);
-      }
-    }
-  }
-
-  get colCount() {
-    return this.#width;
-  }
-
-  get rowCount() {
-    return this.#storage.length / this.#width;
-  }
-
-  get unocupied() {
-    return this.#unocupied.values();
-  }
-
-  getChar(row, col) {
-    const idx = this.#width * row + col;
-    if (col >= this.#width || idx >= this.#storage.length) return undefined;
-
-    return this.#storage[idx];
-  }
-
-  getOccupation(row, col) {
-    const idx = this.#width * row + col;
-    if (col >= this.#width || idx >= this.#storage.length) return undefined;
-
-    return this.#occupation[this.#width * row + col];
-  }
-
-  setChar(char, row, col) {
-    const idx = this.#width * row + col;
-    if (col >= this.#width || idx >= this.#storage.length)
-      throw new RangeError(
-        `(${row},${col}) is out of range. Grid size is ${this.rowCol} rows and ${this.colCount} columns`,
-      );
-    if (this.#occupation[idx] > 0 && this.#storage[idx] != char) return false;
-
-    this.#occupation[idx] += 1;
-    this.#unocupied.delete(this.#createLocKey(row, col));
-    this.#storage[idx] = char;
-    return true;
-  }
-
-  unsetChar(row, col) {
-    const key = this.#createLocKey(row, col);
-    if (this.#unocupied.has(key)) return;
-
-    const idx = this.#width * row + col;
-    if (col >= this.#width || idx >= this.#storage.length)
-      throw new RangeError(
-        `(${row},${col}) is out of range. Grid size is ${this.rowCol} rows and ${this.colCount} columns`,
-      );
-
-    this.#occupation[idx] -= 1;
-    if (this.#occupation[idx] == 0) {
-      this.#unocupied.set(key, [row, col]);
-      this.#storage[idx] = ' ';
-    }
-  }
-
-  toString() {
-    const grid = [];
-    const rowCount = this.rowCount;
-    const colCount = this.colCount;
-
-    for (let r = 0; r < rowCount; r++) {
-      for (let c = 0; c < colCount; c++) {
-        grid.push(this.getChar(r,c))
-      }
-      grid.push("\n");
-    }
-
-    return grid.join("");
-  }
-
-  #createLocKey(row, col) {
-    return `${row}-${col}`
-  }
-}
 
 function createLocationKey(location, direction) {
   return `${location[0]}-${location[1]}.${direction[0]}-${direction[1]}`;
 }
+
 
 function buildCharPositionIndex(wordList) {
   /**
@@ -142,26 +36,16 @@ function buildCharPositionIndex(wordList) {
   return index;
 }
 
-function hasWord(word, grid, start, direction) {
-  const rowCount = grid.rowCount;
-  const colCount = grid.colCount;
-  const [rowStart, colStart] = start;
-  const [rowInc, colInc] = direction;
-
-  if (rowStart < 0 || colStart < 0) return false;
-
-  let idx = 0;
-  for (
-    let r = rowStart, c = colStart;
-    r < rowCount && c < colCount && idx < word.length;
-    r += rowInc, c += colInc, idx++
-  ) {
-    if (word[idx] != grid.getChar(r, c)) return false;
-  }
-
-  return idx == word.length;
-}
-
+/**
+ * 
+ * @param {*} expected 
+ * @param {import("./word-soup.mjs").default} grid 
+ * @param {*} index 
+ * @param {*} wordList 
+ * @param {*} location 
+ * @param {*} dirList 
+ * @returns 
+ */
 function hasUnexpectedSolutions(
   expected,
   grid,
@@ -171,7 +55,7 @@ function hasUnexpectedSolutions(
   dirList,
 ) {
   const [row, col] = location;
-  const char = grid.getChar(row, col);
+  const char = grid.get(location);
 
   // For each word
   for (let word of wordList) {
@@ -200,7 +84,7 @@ function hasUnexpectedSolutions(
         // expected solutions. If it isn't then we found an
         // unexpected solution.
         if (
-          hasWord(word, grid, [rowStart, colStart], direction) &&
+          grid.hasWord(word, [rowStart, colStart], direction) &&
           !expected.get(word).has(locationKey)
         )
           return true;
@@ -212,44 +96,6 @@ function hasUnexpectedSolutions(
   // for the char at the location in question and didn't
   // find any unexpected solution.
   return false;
-}
-
-function placeWord(word, location, direction, grid) {
-  const backtrack = [];
-  const rowCount = grid.rowCount;
-  const colCount = grid.rowCount;
-  const [rowStart, colStart] = location;
-  const [rowInc, colInc] = direction;
-  const rowEnd = rowStart + rowInc * word.length;
-  const colEnd = colStart + colInc * word.length;
-
-  // Check if the end of the word idx is less than 0 or higher than the max index
-  if (rowEnd < 0 || rowEnd > rowCount) return [false, []];
-  if (colEnd < 0 || colEnd > colCount) return [false, []];
-
-  // Place the letters
-  for (
-    let r = rowStart, c = colStart, idx = 0;
-    idx < word.length;
-    r += rowInc, c += colInc, idx++
-  ) {
-    // We might intercept another word
-    // but at a letter that's not the same.
-    // In such circunstances we have to backtrack.
-    backtrack.push(grid.getChar(r, c));
-
-    // TODO: This doesn't work. Due to how the grid
-    // works we can't overwrite a character without
-    // unsetting it first. It will cause an infinite
-    // loop.
-    if (!grid.setChar(word[idx], r, c)) {
-      // This should always be successful.
-      placeWord(backtrack.join(''), location, direction, grid);
-      return [false, []];
-    }
-  }
-
-  return [true, [backtrack.join(''), location, direction]];
 }
 
 function shuffle(array) {
@@ -272,6 +118,13 @@ function shuffle(array) {
   return array;
 }
 
+/**
+ * 
+ * @param {*} word 
+ * @param {import("./word-soup.mjs").default} grid 
+ * @param {*} directions 
+ * @returns 
+ */
 function generateAndShuffleWordPositions(word, grid, directions) {
   const rowCount = grid.rowCount;
   const colCount = grid.colCount;
@@ -282,13 +135,8 @@ function generateAndShuffleWordPositions(word, grid, directions) {
   for (let r = 0; r < rowCount; r++) {
     for (let c = 0; c < colCount; c++) {
       for (let direction of directions) {
-        const [rowInc, colInc] = direction;
-        const rowEnd = r + rowInc * word.length;
-        const colEnd = c + colInc * word.length;
 
-        // Check if the end of the word idx is less than 0 or higher than the max index
-        if (rowEnd < 0 || rowEnd > rowCount) continue;
-        if (colEnd < 0 || colEnd > colCount) continue;
+        if (grid.canFit(word, [r, c], direction))
 
         positions.push([[r, c], direction]);
       }
@@ -301,7 +149,7 @@ function generateAndShuffleWordPositions(word, grid, directions) {
 
 /**
  * 
- * @param {WordSoup} grid 
+ * @param {import("./word-soup.mjs").default} grid 
  * @param {string[]} wordList 
  * @param {string[]} charSpace 
  */
@@ -312,7 +160,7 @@ export function createWordSearchPuzzle(grid, wordList, charSpace) {
 
   const wordListCp = [...wordList].sort((a, b) => b.length - a.length);
   const wordPositionsList = wordListCp.map((w) => {
-    return { w, p: 0, l: generateAndShuffleWordPositions(w, grid, directions), b: undefined };
+    return { w, p: 0, l: generateAndShuffleWordPositions(w, grid, directions)};
   });
 
   // initialize a pointer for the list to 0
@@ -328,14 +176,13 @@ export function createWordSearchPuzzle(grid, wordList, charSpace) {
       //     get enumeration[pointer]
       const [loc, dir] = pos;
       //     try placeWord(word, position)
-      const [success, backtrack] = placeWord(wordInfo.w, loc, dir, grid);
+      const success = grid.place(wordInfo.w, loc, dir);
       //     if previous fails increment pointer go to 1:
       if (!success) {
         wordInfo.p += 1;
         continue posLoop;
       }
 
-      wordInfo.b = backtrack;
       //     place word in expected solutions
       if (!expectedSolutions.has(wordInfo.w)) expectedSolutions.set(wordInfo.w, new Set());
       expectedSolutions.get(wordInfo.w).add(createLocationKey(loc, dir));
@@ -345,7 +192,7 @@ export function createWordSearchPuzzle(grid, wordList, charSpace) {
       for (let idx = 0; idx < wordInfo.w.length; rowStart += rowInc, colStart += colInc, idx++) {
         //       if hasUnexpectedSolution increment pointer go to 1:
         if (hasUnexpectedSolutions(expectedSolutions, grid, charPosIndex, wordListCp, [rowStart, colStart], directions)) {
-          placeWord(backtrack[0], loc, dir, grid);
+          grid.unplace(word, loc, dir);
           wordInfo.p += 1;
           continue posLoop;
         }
@@ -360,7 +207,7 @@ export function createWordSearchPuzzle(grid, wordList, charSpace) {
     wp -= 1;
     //   backtrack the previously placed word
     const [b, p, d] = wordPositionsList[wp].b;
-    if (wp >= 0) placeWord(b, p, d, grid);
+    if (wp >= 0) grid.unplace(b, p, d);
   }
 
   // if wp < 0 then we failed to place the words
@@ -371,34 +218,32 @@ export function createWordSearchPuzzle(grid, wordList, charSpace) {
   // Build a list with all unocupied positions.
   // The entries are [pos, shuffedLetters]
   const unocupiedPosList = [...grid.unocupied].map((pos) => {
-    return { pos, l: shuffle([...charSpace]), idx: 0}
+    return { pos, l: shuffle([...charSpace]), idx: 0 }
   });
 
   // For each unocupied position make a similar procedure to the above.
   let posP = 0;
-  loop: while (posP >= 0 && posP < unocupiedPosList.length) {
+  posLoop: while (posP >= 0 && posP < unocupiedPosList.length) {
     const posInfo = unocupiedPosList[posP];
-    const [row, col] = posInfo.pos;
 
-    pLoop: while (posInfo.idx < posInfo.l.length) {
+    charLoop: while (posInfo.idx < posInfo.l.length) {
       const char = posInfo.l[posInfo.idx];
-      grid.setChar(char, row, col);
+      grid.set(char, posInfo.pos);
 
       if (hasUnexpectedSolutions(expectedSolutions, grid, charPosIndex, wordListCp, posInfo.pos, directions)) {
-        grid.unsetChar(row, col);
+        grid.unset(posInfo.pos);
         posInfo.idx += 1;
-        continue pLoop;
+        continue charLoop;
       }
 
       posP += 1;
-      continue loop;
+      continue posLoop;
     }
 
     posP -= 1;
     posInfo.idx = 0;
-    grid.unsetChar(row, col);
+    grid.unset(posInfo.pos);
   }
 
-  grid.solutions = expectedSolutions;
   return posP >= 0;
 }
